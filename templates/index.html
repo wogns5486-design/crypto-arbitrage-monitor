@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Arbitrage Monitor</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <h1>Crypto Arbitrage Monitor</h1>
+            <div class="rate-display">
+                <span class="label">USDT/KRW:</span>
+                <span id="exchange-rate">-</span>
+                <span id="rate-age" class="age"></span>
+            </div>
+        </div>
+        <div class="top-bar-center">
+            <div id="exchange-indicators" class="exchange-indicators"></div>
+        </div>
+        <div class="top-bar-right">
+            <div id="connection-status" class="connection-ok">LIVE</div>
+            <button id="settings-btn" class="btn-settings" onclick="openSettings()">Settings</button>
+        </div>
+    </header>
+
+    <!-- Connection Warning Banner -->
+    <div id="stale-banner" class="stale-banner hidden">
+        Connection unstable - data may be outdated
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Spread Table -->
+        <div class="table-section">
+            <div class="table-header">
+                <h2>Spread Opportunities</h2>
+                <div class="table-controls">
+                    <label>
+                        Min Spread:
+                        <input type="number" id="threshold-input" step="0.1" min="0" value="0.5">%
+                    </label>
+                    <label>
+                        <input type="checkbox" id="filter-deposit" checked> Deposit/Withdraw Filter
+                    </label>
+                    <label>
+                        <input type="checkbox" id="filter-network" checked> Common Network Filter
+                    </label>
+                </div>
+            </div>
+            <table id="spread-table">
+                <thead>
+                    <tr>
+                        <th>Coin</th>
+                        <th>Buy Exchange</th>
+                        <th>Sell Exchange</th>
+                        <th>Buy Price (KRW)</th>
+                        <th>Sell Price (KRW)</th>
+                        <th>Spread %</th>
+                        <th>Networks</th>
+                        <th>Updated</th>
+                    </tr>
+                </thead>
+                <tbody id="spread-tbody">
+                    <tr><td colspan="8" class="no-data">Connecting to exchanges...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Side Panel -->
+        <div id="side-panel" class="side-panel hidden">
+            <div class="panel-header">
+                <h3 id="panel-title">Coin Detail</h3>
+                <button onclick="closePanel()" class="btn-close">&times;</button>
+            </div>
+            <div id="panel-content"></div>
+        </div>
+    </div>
+
+    <!-- Alert Log -->
+    <div class="alert-section">
+        <h3>Recent Alerts <span id="alert-count">(0)</span></h3>
+        <div id="alert-log" class="alert-log"></div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button onclick="closeSettings()" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Spread Threshold (%)</label>
+                    <input type="number" id="setting-threshold" step="0.1" min="0" value="0.5">
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="setting-deposit" checked> Filter by Deposit/Withdrawal Status</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="setting-network" checked> Filter by Common Network</label>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label>Telegram Bot Token</label>
+                    <input type="text" id="setting-telegram-token" placeholder="Server-side .env configuration">
+                    <small>Configure in .env file on server</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="saveSettings()" class="btn-primary">Save</button>
+                <button onclick="closeSettings()" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="alert-sound" src="/static/sounds/alert.mp3" preload="auto"></audio>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
