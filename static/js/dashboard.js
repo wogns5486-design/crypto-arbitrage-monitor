@@ -342,7 +342,7 @@ function setupInlineControls() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    threshold_pct: parseFloat(thresholdInput.value) || 0.5,
+                    threshold_pct: thresholdInput.value !== "" ? parseFloat(thresholdInput.value) : 0.5,
                     filter_deposit_withdraw: depositCheck.checked,
                     filter_common_network: networkCheck.checked,
                 }),
