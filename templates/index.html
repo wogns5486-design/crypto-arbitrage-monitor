@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Arbitrage Monitor</title>
+    <title>코인 차익거래 모니터</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <!-- Top Bar -->
     <header class="top-bar">
         <div class="top-bar-left">
-            <h1>Crypto Arbitrage Monitor</h1>
+            <h1>코인 차익거래 모니터</h1>
             <div class="rate-display">
                 <span class="label">USDT/KRW:</span>
                 <span id="exchange-rate">-</span>
@@ -22,13 +22,13 @@
         </div>
         <div class="top-bar-right">
             <div id="connection-status" class="connection-ok">LIVE</div>
-            <button id="settings-btn" class="btn-settings" onclick="openSettings()">Settings</button>
+            <button id="settings-btn" class="btn-settings" onclick="openSettings()">설정</button>
         </div>
     </header>
 
     <!-- Connection Warning Banner -->
     <div id="stale-banner" class="stale-banner hidden">
-        Connection unstable - data may be outdated
+        연결 불안정 - 데이터가 오래되었을 수 있습니다
     </div>
 
     <!-- Main Content -->
@@ -36,35 +36,35 @@
         <!-- Spread Table -->
         <div class="table-section">
             <div class="table-header">
-                <h2>Spread Opportunities</h2>
+                <h2>스프레드 기회</h2>
                 <div class="table-controls">
                     <label>
-                        Min Spread:
+                        최소 스프레드:
                         <input type="number" id="threshold-input" step="0.1" min="0" value="0.5">%
                     </label>
                     <label>
-                        <input type="checkbox" id="filter-deposit" checked> Deposit/Withdraw Filter
+                        <input type="checkbox" id="filter-deposit" checked> 입출금 필터
                     </label>
                     <label>
-                        <input type="checkbox" id="filter-network" checked> Common Network Filter
+                        <input type="checkbox" id="filter-network" checked> 공통 네트워크 필터
                     </label>
                 </div>
             </div>
             <table id="spread-table">
                 <thead>
                     <tr>
-                        <th>Coin</th>
-                        <th>Buy Exchange</th>
-                        <th>Sell Exchange</th>
-                        <th>Buy Price (KRW)</th>
-                        <th>Sell Price (KRW)</th>
-                        <th>Spread %</th>
-                        <th>Networks</th>
-                        <th>Updated</th>
+                        <th>코인</th>
+                        <th>매수 거래소</th>
+                        <th>매도 거래소</th>
+                        <th>매수가 (KRW)</th>
+                        <th>매도가 (KRW)</th>
+                        <th>스프레드 %</th>
+                        <th>네트워크</th>
+                        <th>업데이트</th>
                     </tr>
                 </thead>
                 <tbody id="spread-tbody">
-                    <tr><td colspan="8" class="no-data">Connecting to exchanges...</td></tr>
+                    <tr><td colspan="8" class="no-data">거래소 연결 중...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -72,7 +72,7 @@
         <!-- Side Panel -->
         <div id="side-panel" class="side-panel hidden">
             <div class="panel-header">
-                <h3 id="panel-title">Coin Detail</h3>
+                <h3 id="panel-title">코인 상세</h3>
                 <button onclick="closePanel()" class="btn-close">&times;</button>
             </div>
             <div id="panel-content"></div>
@@ -81,7 +81,7 @@
 
     <!-- Alert Log -->
     <div class="alert-section">
-        <h3>Recent Alerts <span id="alert-count">(0)</span></h3>
+        <h3>최근 알림 <span id="alert-count">(0)</span></h3>
         <div id="alert-log" class="alert-log"></div>
     </div>
 
@@ -89,30 +89,30 @@
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Settings</h3>
+                <h3>설정</h3>
                 <button onclick="closeSettings()" class="btn-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Spread Threshold (%)</label>
+                    <label>스프레드 임계값 (%)</label>
                     <input type="number" id="setting-threshold" step="0.1" min="0" value="0.5">
                 </div>
                 <div class="form-group">
-                    <label><input type="checkbox" id="setting-deposit" checked> Filter by Deposit/Withdrawal Status</label>
+                    <label><input type="checkbox" id="setting-deposit" checked> 입출금 상태 필터</label>
                 </div>
                 <div class="form-group">
-                    <label><input type="checkbox" id="setting-network" checked> Filter by Common Network</label>
+                    <label><input type="checkbox" id="setting-network" checked> 공통 네트워크 필터</label>
                 </div>
                 <hr>
                 <div class="form-group">
-                    <label>Telegram Bot Token</label>
-                    <input type="text" id="setting-telegram-token" placeholder="Server-side .env configuration">
-                    <small>Configure in .env file on server</small>
+                    <label>텔레그램 봇 토큰</label>
+                    <input type="text" id="setting-telegram-token" placeholder="서버 .env 파일에서 설정">
+                    <small>서버의 .env 파일에서 설정하세요</small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button onclick="saveSettings()" class="btn-primary">Save</button>
-                <button onclick="closeSettings()" class="btn-secondary">Cancel</button>
+                <button onclick="saveSettings()" class="btn-primary">저장</button>
+                <button onclick="closeSettings()" class="btn-secondary">취소</button>
             </div>
         </div>
     </div>

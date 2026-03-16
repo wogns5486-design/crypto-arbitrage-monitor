@@ -94,7 +94,7 @@ function renderSpreads(spreads) {
     const tbody = document.getElementById("spread-tbody");
 
     if (!spreads || spreads.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="no-data">No spread opportunities found above threshold</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="no-data">임계값 이상의 스프레드 기회가 없습니다</td></tr>';
         return;
     }
 
@@ -206,9 +206,9 @@ async function showCoinDetail(symbol) {
     const title = document.getElementById("panel-title");
     const content = document.getElementById("panel-content");
 
-    title.textContent = `${symbol} Detail`;
+    title.textContent = `${symbol} 상세`;
     panel.classList.remove("hidden");
-    content.innerHTML = '<p class="no-data">Loading...</p>';
+    content.innerHTML = '<p class="no-data">로딩 중...</p>';
 
     try {
         // Fetch coin status
@@ -219,7 +219,7 @@ async function showCoinDetail(symbol) {
             const statusData = await statusRes.json();
             statusHtml = renderCoinStatusPanel(statusData);
         } else {
-            statusHtml = '<p class="status-unknown">No deposit/withdrawal data available</p>';
+            statusHtml = '<p class="status-unknown">입출금 데이터를 가져올 수 없습니다</p>';
         }
 
         // Fetch Gate.io loan info
@@ -232,17 +232,17 @@ async function showCoinDetail(symbol) {
                 if (loan) {
                     loanHtml = `
                         <div class="panel-section">
-                            <h4>Gate.io Margin Loan</h4>
+                            <h4>Gate.io 마진 대출</h4>
                             <table class="status-table">
-                                <tr><td>Loanable</td><td class="${loan.loanable ? 'status-ok' : 'status-fail'}">${loan.loanable ? 'Yes' : 'No'}</td></tr>
-                                ${loan.rate ? `<tr><td>Rate</td><td>${(loan.rate * 100).toFixed(4)}%/day</td></tr>` : ""}
+                                <tr><td>대출 가능</td><td class="${loan.loanable ? 'status-ok' : 'status-fail'}">${loan.loanable ? '가능' : '불가'}</td></tr>
+                                ${loan.rate ? `<tr><td>이율</td><td>${(loan.rate * 100).toFixed(4)}%/일</td></tr>` : ""}
                             </table>
                         </div>`;
                 } else {
                     loanHtml = `
                         <div class="panel-section">
-                            <h4>Gate.io Margin Loan</h4>
-                            <p class="status-unknown">Not available for ${symbol}</p>
+                            <h4>Gate.io 마진 대출</h4>
+                            <p class="status-unknown">${symbol}은(는) 대출 불가</p>
                         </div>`;
                 }
             }
@@ -252,21 +252,21 @@ async function showCoinDetail(symbol) {
 
         content.innerHTML = statusHtml + loanHtml;
     } catch (e) {
-        content.innerHTML = '<p class="status-unknown">Failed to load data</p>';
+        content.innerHTML = '<p class="status-unknown">데이터 로딩 실패</p>';
     }
 }
 
 function renderCoinStatusPanel(data) {
-    let html = '<div class="panel-section"><h4>Exchange Status</h4><table class="status-table">';
-    html += "<tr><th>Exchange</th><th>Deposit</th><th>Withdraw</th><th>Networks</th></tr>";
+    let html = '<div class="panel-section"><h4>거래소 상태</h4><table class="status-table">';
+    html += "<tr><th>거래소</th><th>입금</th><th>출금</th><th>네트워크</th></tr>";
 
     for (const [name, info] of Object.entries(data.exchanges)) {
-        const dep = info.deposit_enabled === true ? '<span class="status-ok">OK</span>' :
-                    info.deposit_enabled === false ? '<span class="status-fail">Disabled</span>' :
-                    '<span class="status-unknown">Unknown</span>';
-        const wd = info.withdraw_enabled === true ? '<span class="status-ok">OK</span>' :
-                   info.withdraw_enabled === false ? '<span class="status-fail">Disabled</span>' :
-                   '<span class="status-unknown">Unknown</span>';
+        const dep = info.deposit_enabled === true ? '<span class="status-ok">가능</span>' :
+                    info.deposit_enabled === false ? '<span class="status-fail">중지</span>' :
+                    '<span class="status-unknown">미확인</span>';
+        const wd = info.withdraw_enabled === true ? '<span class="status-ok">가능</span>' :
+                   info.withdraw_enabled === false ? '<span class="status-fail">중지</span>' :
+                   '<span class="status-unknown">미확인</span>';
         const nets = (info.networks || []).map(n => `<span class="network-badge">${escapeHtml(n)}</span>`).join("") || "-";
 
         html += `<tr><td>${escapeHtml(name)}</td><td>${dep}</td><td>${wd}</td><td>${nets}</td></tr>`;
@@ -323,7 +323,7 @@ async function saveSettings() {
             closeSettings();
         }
     } catch (e) {
-        alert("Settings save failed. Please try again.");
+        alert("설정 저장에 실패했습니다. 다시 시도해주세요.");
     }
 }
 
@@ -383,10 +383,10 @@ function getRelativeTime(timestamp) {
     const then = new Date(timestamp).getTime();
     const diff = Math.floor((now - then) / 1000);
 
-    if (diff < 5) return "just now";
-    if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 5) return "방금";
+    if (diff < 60) return `${diff}초 전`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    return `${Math.floor(diff / 3600)}시간 전`;
 }
 
 // === Initialize ===
