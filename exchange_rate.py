@@ -38,6 +38,12 @@ class ExchangeRateManager:
         """Register callback for rate updates."""
         self._callbacks.append(callback)
 
+    def off_rate_update(self, callback: Callable[[ExchangeRate], None]) -> None:
+        try:
+            self._callbacks.remove(callback)
+        except ValueError:
+            pass
+
     # --- Main loop ---
 
     async def run(self) -> None:
@@ -159,7 +165,7 @@ class ExchangeRateManager:
             is_stale=False,
         )
         self.current_rate = rate
-        for cb in self._callbacks:
+        for cb in list(self._callbacks):
             try:
                 cb(rate)
             except Exception:

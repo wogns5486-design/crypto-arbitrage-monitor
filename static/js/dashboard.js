@@ -47,6 +47,8 @@ function connectSSE() {
 
     eventSource.onerror = () => {
         updateConnectionStatus(false);
+        eventSource.close();
+        setTimeout(() => connectSSE(), 3000);
     };
 
     // Start heartbeat monitoring
@@ -78,6 +80,14 @@ function updateConnectionStatus(connected) {
     }
 }
 
+// === Utility: XSS Prevention ===
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // === Render Functions ===
 
 function renderSpreads(spreads) {
@@ -94,14 +104,14 @@ function renderSpreads(spreads) {
         const buyClass = isBuyDomestic(s.buy_exchange) ? "exchange-domestic" : "exchange-foreign";
         const sellClass = isBuyDomestic(s.sell_exchange) ? "exchange-domestic" : "exchange-foreign";
         const networks = (s.common_networks || []).map(n =>
-            `<span class="network-badge">${n}</span>`
+            `<span class="network-badge">${escapeHtml(n)}</span>`
         ).join("") || '<span class="status-unknown">-</span>';
         const age = getRelativeTime(s.timestamp);
 
         return `<tr class="${s.spread_pct >= 1.0 ? 'highlight' : ''}">
-            <td class="clickable" onclick="showCoinDetail('${s.symbol}')">${s.symbol}</td>
-            <td class="${buyClass}">${s.buy_exchange}</td>
-            <td class="${sellClass}">${s.sell_exchange}</td>
+            <td class="clickable" onclick="showCoinDetail('${escapeHtml(s.symbol)}')">${escapeHtml(s.symbol)}</td>
+            <td class="${buyClass}">${escapeHtml(s.buy_exchange)}</td>
+            <td class="${sellClass}">${escapeHtml(s.sell_exchange)}</td>
             <td class="price">${formatKRW(s.buy_ask_krw)}</td>
             <td class="price">${formatKRW(s.sell_bid_krw)}</td>
             <td class="${spreadClass}">${s.spread_pct.toFixed(2)}%</td>
@@ -168,8 +178,8 @@ function renderAlertLog() {
         const time = new Date(a.triggered_at).toLocaleTimeString("ko-KR");
         return `<div class="alert-item">
             <span>
-                <span class="alert-symbol">${a.symbol}</span>
-                ${a.buy_exchange} → ${a.sell_exchange}
+                <span class="alert-symbol">${escapeHtml(a.symbol)}</span>
+                ${escapeHtml(a.buy_exchange)} → ${escapeHtml(a.sell_exchange)}
             </span>
             <span class="alert-spread">${a.spread_pct.toFixed(2)}%</span>
             <span class="alert-time">${time}</span>
@@ -257,9 +267,9 @@ function renderCoinStatusPanel(data) {
         const wd = info.withdraw_enabled === true ? '<span class="status-ok">OK</span>' :
                    info.withdraw_enabled === false ? '<span class="status-fail">Disabled</span>' :
                    '<span class="status-unknown">Unknown</span>';
-        const nets = (info.networks || []).map(n => `<span class="network-badge">${n}</span>`).join("") || "-";
+        const nets = (info.networks || []).map(n => `<span class="network-badge">${escapeHtml(n)}</span>`).join("") || "-";
 
-        html += `<tr><td>${name}</td><td>${dep}</td><td>${wd}</td><td>${nets}</td></tr>`;
+        html += `<tr><td>${escapeHtml(name)}</td><td>${dep}</td><td>${wd}</td><td>${nets}</td></tr>`;
     }
 
     html += "</table></div>";
@@ -313,7 +323,7 @@ async function saveSettings() {
             closeSettings();
         }
     } catch (e) {
-        // Ignore
+        alert("Settings save failed. Please try again.");
     }
 }
 
@@ -327,8 +337,8 @@ function setupInlineControls() {
 
     function pushSettings() {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(async () => {
-            await fetch("/api/settings", {
+        debounceTimer = setTimeout(() => {
+            fetch("/api/settings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -336,6 +346,12 @@ function setupInlineControls() {
                     filter_deposit_withdraw: depositCheck.checked,
                     filter_common_network: networkCheck.checked,
                 }),
+            })
+            .then(r => r.json())
+            .then(s => {
+                document.getElementById("setting-threshold").value = s.threshold_pct;
+                document.getElementById("setting-deposit").checked = s.filter_deposit_withdraw;
+                document.getElementById("setting-network").checked = s.filter_common_network;
             });
         }, 500);
     }

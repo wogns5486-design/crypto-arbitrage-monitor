@@ -421,3 +421,47 @@ tr.highlight {
 ::-webkit-scrollbar-track { background: #0d1117; }
 ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+/* === Responsive === */
+@media (max-width: 768px) {
+    .top-bar {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 12px;
+    }
+
+    .exchange-indicators {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .main-content {
+        flex-direction: column;
+        padding: 8px 12px;
+    }
+
+    .side-panel {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 12px;
+        max-height: none;
+    }
+
+    .table-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .table-controls {
+        flex-wrap: wrap;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .modal-content {
+        width: 95%;
+    }
+}

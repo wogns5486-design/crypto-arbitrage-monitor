@@ -34,6 +34,12 @@ class AlertManager:
         """Register callback for alert events (used by SSE stream)."""
         self._callbacks.append(callback)
 
+    def off_alert(self, callback) -> None:
+        try:
+            self._callbacks.remove(callback)
+        except ValueError:
+            pass
+
     async def check_and_alert(self, spread: Spread, threshold_pct: float):
         """Check if spread exceeds threshold and trigger alerts.
 

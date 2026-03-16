@@ -20,7 +20,7 @@ class BybitExchange(BaseExchange):
         return f"{canonical}USDT"
 
     def from_exchange_symbol(self, raw: str) -> str:
-        return raw.upper().replace("USDT", "")
+        return raw.upper().removesuffix("USDT")
 
     async def _connect_and_subscribe(self, symbols: list[str]) -> None:
         session = await self._get_session()

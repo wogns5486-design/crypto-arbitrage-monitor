@@ -95,7 +95,6 @@ class GateioExchange(BaseExchange):
                     return None
                 data = await resp.json()
 
-            trade_disabled = data.get("trade_disabled", False)
             deposit_disabled = data.get("deposit_disabled", False)
             withdraw_disabled = data.get("withdraw_disabled", False)
 

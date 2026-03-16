@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 
@@ -9,7 +9,7 @@ class Ticker(BaseModel):
     ask: float  # best ask price
     bid_krw: float = 0.0  # normalized to KRW
     ask_krw: float = 0.0  # normalized to KRW
-    timestamp: datetime = datetime.now()
+    timestamp: datetime = Field(default_factory=datetime.now)
 
 
 class Spread(BaseModel):
@@ -20,7 +20,7 @@ class Spread(BaseModel):
     sell_bid_krw: float  # bid price at sell exchange (KRW)
     spread_pct: float  # (sell_bid - buy_ask) / buy_ask * 100
     common_networks: list[str] = []
-    timestamp: datetime = datetime.now()
+    timestamp: datetime = Field(default_factory=datetime.now)
 
 
 class CoinStatus(BaseModel):
@@ -45,13 +45,13 @@ class AlertEvent(BaseModel):
     spread_pct: float
     buy_ask_krw: float
     sell_bid_krw: float
-    triggered_at: datetime = datetime.now()
+    triggered_at: datetime = Field(default_factory=datetime.now)
 
 
 class ExchangeRate(BaseModel):
     krw_per_usdt: float
     source: str  # "upbit" or "bithumb"
-    timestamp: datetime = datetime.now()
+    timestamp: datetime = Field(default_factory=datetime.now)
     is_stale: bool = False
 
 

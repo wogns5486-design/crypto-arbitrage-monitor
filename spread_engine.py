@@ -43,6 +43,12 @@ class SpreadEngine:
         """Register callback for spread updates (used by SSE)."""
         self._callbacks.append(callback)
 
+    def off_spread_update(self, callback: Callable[[list[Spread]], None]) -> None:
+        try:
+            self._callbacks.remove(callback)
+        except ValueError:
+            pass
+
     # --- Ticker ingestion ---
 
     def update_ticker(self, ticker: Ticker) -> None:
@@ -182,6 +188,20 @@ class SpreadEngine:
         results.sort(key=lambda s: s.spread_pct, reverse=True)
         return results
 
+    # Network name normalization map (different exchanges use different names)
+    _NETWORK_ALIASES: dict[str, str] = {
+        "ERC20": "ETH", "TRC20": "TRX", "BEP20": "BSC", "BEP2": "BNB",
+        "Ethereum": "ETH", "ETHEREUM": "ETH", "Tron": "TRX", "TRON": "TRX",
+        "Polygon": "MATIC", "POLYGON": "MATIC", "Arbitrum One": "ARBITRUM",
+        "ARBITRUM": "ARBITRUM", "Optimism": "OPTIMISM", "OPTIMISM": "OPTIMISM",
+        "Solana": "SOL", "SOLANA": "SOL", "Avalanche C-Chain": "AVAXC",
+        "AVAXC": "AVAXC", "BASE": "BASE", "Base": "BASE",
+    }
+
+    def _normalize_network(self, name: str) -> str:
+        """Normalize network name for cross-exchange comparison."""
+        return self._NETWORK_ALIASES.get(name, name.upper())
+
     def _get_common_networks(self, symbol: str, exchange_a: str, exchange_b: str) -> list[str]:
         """Return list of network names available on both exchanges for symbol."""
         statuses = self._coin_statuses.get(symbol, {})
@@ -189,8 +209,8 @@ class SpreadEngine:
         status_b = statuses.get(exchange_b)
         if status_a is None or status_b is None:
             return []
-        networks_a = set(status_a.networks)
-        networks_b = set(status_b.networks)
+        networks_a = {self._normalize_network(n) for n in status_a.networks}
+        networks_b = {self._normalize_network(n) for n in status_b.networks}
         return sorted(networks_a & networks_b)
 
     def _check_deposit_withdraw(self, symbol: str, buy_exchange: str, sell_exchange: str) -> bool:
@@ -214,11 +234,16 @@ class SpreadEngine:
     async def _fetch_coin_statuses(self) -> None:
         """Fetch deposit/withdrawal/network status from all exchanges."""
         from config import SYMBOLS
+        sem = asyncio.Semaphore(10)
+
+        async def limited_fetch(exchange, symbol):
+            async with sem:
+                return await self._fetch_one_status(exchange, symbol)
 
         tasks = []
         for exchange in self._exchanges:
             for symbol in SYMBOLS:
-                tasks.append(self._fetch_one_status(exchange, symbol))
+                tasks.append(limited_fetch(exchange, symbol))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -251,14 +276,15 @@ class SpreadEngine:
         if self._alert_manager is not None:
             try:
                 for spread in spreads:
-                    asyncio.ensure_future(
+                    task = asyncio.create_task(
                         self._alert_manager.check_and_alert(spread, self._settings.threshold_pct)
                     )
+                    task.add_done_callback(self._handle_alert_task_error)
             except Exception:
                 logger.exception("Error notifying alert manager")
 
         # SSE callbacks
-        for cb in self._callbacks:
+        for cb in list(self._callbacks):
             try:
                 cb(spreads)
             except Exception:
@@ -282,6 +308,13 @@ class SpreadEngine:
 
     def get_coin_status(self, symbol: str) -> dict[str, CoinStatus]:
         return dict(self._coin_statuses.get(symbol, {}))
+
+    def _handle_alert_task_error(self, task: asyncio.Task) -> None:
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc:
+            logger.error("Alert task error: %s", exc)
 
     # --- Helpers ---
 

@@ -3,7 +3,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from starlette.responses import StreamingResponse
 
 from config import SSE_HEARTBEAT_SEC
@@ -78,19 +78,18 @@ async def _event_generator(spread_engine, exchange_rate_manager, alert_manager, 
     except asyncio.CancelledError:
         logger.info("SSE stream cancelled")
     finally:
-        # Unregister callbacks
-        if on_spread in spread_engine._callbacks:
-            spread_engine._callbacks.remove(on_spread)
-        if on_rate in exchange_rate_manager._callbacks:
-            exchange_rate_manager._callbacks.remove(on_rate)
-        if on_alert in alert_manager._callbacks:
-            alert_manager._callbacks.remove(on_alert)
+        spread_engine.off_spread_update(on_spread)
+        exchange_rate_manager.off_rate_update(on_rate)
+        alert_manager.off_alert(on_alert)
 
 
 @router.get("/stream")
-async def sse_stream():
+async def sse_stream(request: Request):
     """Server-Sent Events stream for real-time data."""
-    from main import spread_engine, exchange_rate_manager, alert_manager, exchanges_list
+    spread_engine = request.app.state.spread_engine
+    exchange_rate_manager = request.app.state.exchange_rate_manager
+    alert_manager = request.app.state.alert_manager
+    exchanges_list = request.app.state.exchanges_list
 
     return StreamingResponse(
         _event_generator(spread_engine, exchange_rate_manager, alert_manager, exchanges_list),

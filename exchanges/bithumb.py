@@ -28,7 +28,7 @@ class BithumbExchange(BaseExchange):
             self.logger.info("Connected to Bithumb WebSocket")
 
             subscribe_msg = {
-                "type": "orderbookdepth",
+                "type": "orderbooksnapshot",
                 "symbols": exchange_symbols,
             }
             await ws.send_json(subscribe_msg)
@@ -50,7 +50,7 @@ class BithumbExchange(BaseExchange):
     def _handle_message(self, raw: str) -> None:
         try:
             data = json.loads(raw)
-            if data.get("type") != "orderbookdepth":
+            if data.get("type") != "orderbooksnapshot":
                 return
 
             content = data.get("content", {})

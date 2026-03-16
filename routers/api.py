@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from models import Settings, CoinStatus, GateLoan
@@ -21,26 +21,23 @@ class ErrorResponse(BaseModel):
 
 
 @router.get("/settings", response_model=Settings)
-async def get_settings():
+async def get_settings(request: Request):
     """Get current monitoring settings."""
-    from main import spread_engine
-    return spread_engine.get_settings()
+    return request.app.state.spread_engine.get_settings()
 
 
 @router.post("/settings", response_model=Settings)
-async def update_settings(update: SettingsUpdate):
+async def update_settings(update: SettingsUpdate, request: Request):
     """Update monitoring settings. Returns updated settings with incremented version."""
-    from main import spread_engine
     kwargs = {k: v for k, v in update.model_dump().items() if v is not None}
     if not kwargs:
         raise HTTPException(status_code=400, detail="No fields to update")
-    return spread_engine.update_settings(**kwargs)
+    return request.app.state.spread_engine.update_settings(**kwargs)
 
 
 @router.get("/exchanges")
-async def get_exchanges():
+async def get_exchanges(request: Request):
     """Get exchange connection status."""
-    from main import exchanges_list
     return {
         "exchanges": [
             {
@@ -48,27 +45,25 @@ async def get_exchanges():
                 "type": ex.exchange_type,
                 "connected": ex.connected,
             }
-            for ex in exchanges_list
+            for ex in request.app.state.exchanges_list
         ]
     }
 
 
 @router.get("/rate")
-async def get_exchange_rate():
+async def get_exchange_rate(request: Request):
     """Get current KRW/USDT exchange rate."""
-    from main import exchange_rate_manager
-    rate = exchange_rate_manager.get_rate()
+    rate = request.app.state.exchange_rate_manager.get_rate()
     if rate is None:
         raise HTTPException(status_code=503, detail="Exchange rate not available yet")
     return rate.model_dump(mode="json")
 
 
 @router.get("/coin-status/{symbol}")
-async def get_coin_status(symbol: str):
+async def get_coin_status(symbol: str, request: Request):
     """Get deposit/withdrawal/network status for a coin across all exchanges."""
-    from main import spread_engine
     symbol = symbol.upper()
-    statuses = spread_engine.get_coin_status(symbol)
+    statuses = request.app.state.spread_engine.get_coin_status(symbol)
     if not statuses:
         raise HTTPException(status_code=404, detail=f"No data for {symbol}")
     return {
@@ -78,12 +73,10 @@ async def get_coin_status(symbol: str):
 
 
 @router.get("/gate-loans")
-async def get_gate_loans():
+async def get_gate_loans(request: Request):
     """Get Gate.io margin loan availability."""
-    from main import exchanges_list
-
     gate = None
-    for ex in exchanges_list:
+    for ex in request.app.state.exchanges_list:
         if ex.name == "gate.io":
             gate = ex
             break
@@ -103,13 +96,22 @@ async def get_gate_loans():
 
 
 @router.get("/spreads")
-async def get_spreads():
+async def get_spreads(request: Request):
     """Get current spread data (snapshot, not streaming)."""
-    from main import spread_engine
-    spreads = spread_engine.get_spreads()
-    settings = spread_engine.get_settings()
+    spreads = request.app.state.spread_engine.get_spreads()
+    settings = request.app.state.spread_engine.get_settings()
     return {
         "spreads": [s.model_dump(mode="json") for s in spreads],
         "settings_version": settings.settings_version,
         "count": len(spreads),
+    }
+
+
+@router.get("/alert-history")
+async def get_alert_history(request: Request, limit: int = 50):
+    """Get recent alert history, newest first."""
+    history = request.app.state.alert_manager.get_history(limit=limit)
+    return {
+        "alerts": [a.model_dump(mode="json") for a in history],
+        "count": len(history),
     }
